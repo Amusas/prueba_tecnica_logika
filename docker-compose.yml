@@ -1,0 +1,39 @@
+services:
+  api_prueba_logika:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: prueba_tecnica_fastapi:latest
+    ports:
+      - "8000:8000"
+    environment:
+      # DB
+      - DB_HOST=postgres
+      - DB_USER=admin
+      - DB_PASSWORD=admin1234
+      - DB_NAME=logika_db
+      - DB_PORT=5432
+
+      # JWT / Security
+      - SECRET_KEY=supersecretkey
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin1234
+      POSTGRES_DB: logika_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

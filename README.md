@@ -125,17 +125,35 @@ Para probar la API, puedes usar las siguientes credenciales pre-cargadas:
 
 ## 🧪 Cómo Ejecutar las Pruebas
 
-### 1. Pruebas Unitarias (Slogan: "Calidad de Código")
-Ejecuta la suite de pruebas internas para validar la lógica sin depender de una base de datos real:
-```bash
-pytest tests/unit
-```
+Puedes ejecutar las pruebas tanto en tu equipo local como dentro de los contenedores de Docker.
 
-### 2. Pruebas de Integración (Slogan: "Flujo Real")
-Con el servidor corriendo (`docker compose up`), abre otra terminal y ejecuta estos scripts para validar el comportamiento real punto a punto:
-*   `python verify_auth.py`: Valida el proceso de autenticación JWT.
-*   `python verify_tasks.py`: Valida el CRUD completo, incluyendo el borrado suave y la paginación.
-*   `python verify_ownership.py`: Valida la seguridad de aislamiento (Ownership) entre diferentes usuarios.
+### Opción 1: Desde el Host (Tu terminal local)
+**Requisito**: Debes tener el entorno virtual activo y las dependencias instaladas (`pip install -r requirements.txt`).
+
+*   **Pruebas Unitarias**:
+    ```bash
+    pytest tests/unit
+    ```
+*   **Pruebas de Integración** (Requiere que la app esté corriendo):
+    ```bash
+    python verify_auth.py
+    python verify_tasks.py
+    python verify_ownership.py
+    ```
+
+### Opción 2: Desde Docker (Recomendado)
+Si tienes el proyecto corriendo con `docker compose`, puedes ejecutar las pruebas dentro del contenedor sin instalar nada en tu equipo:
+
+*   **Pruebas Unitarias**:
+    ```bash
+    docker compose exec api_prueba_logika pytest tests/unit
+    ```
+*   **Pruebas de Integración**:
+    ```bash
+    docker compose exec api_prueba_logika python verify_auth.py
+    docker compose exec api_prueba_logika python verify_tasks.py
+    docker compose exec api_prueba_logika python verify_ownership.py
+    ```
 
 ---
 

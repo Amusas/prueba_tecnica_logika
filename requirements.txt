@@ -10,3 +10,8 @@ tenacity
 structlog
 python-jose[cryptography]
 pydantic-settings
+# Testing
+pytest
+pytest-mock
+httpx
+requests

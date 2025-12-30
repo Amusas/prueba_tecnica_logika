@@ -36,7 +36,7 @@ def test_create_task_endpoint(mock_create):
     )
     mock_create.return_value = mock_task
     
-    response = client.post("/api/tasks/", json={"title": "API Task", "description": "Desc"})
+    response = client.post("/api/v1/tasks/", json={"title": "API Task", "description": "Desc"})
     
     assert response.status_code == 201
     assert response.json()["data"]["title"] == "API Task"
@@ -56,7 +56,7 @@ def test_list_tasks_endpoint(mock_list):
         items=[mock_dto], total=1, page=1, page_size=10, total_pages=1
     )
     
-    response = client.get("/api/tasks/")
+    response = client.get("/api/v1/tasks/")
     
     assert response.status_code == 200
     assert len(response.json()["data"]["items"]) == 1
@@ -68,7 +68,7 @@ def test_get_task_not_found_endpoint(mock_get):
     from app.exceptions.task import TaskNotFoundException
     mock_get.side_effect = TaskNotFoundException(detail="No encontrada")
     
-    response = client.get("/api/tasks/999")
+    response = client.get("/api/v1/tasks/999")
     
     assert response.status_code == 404
     assert response.json()["success"] is False

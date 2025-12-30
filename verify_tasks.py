@@ -2,8 +2,8 @@ import requests
 import sys
 
 BASE_URL = "http://localhost:8000"
-LOGIN_URL = f"{BASE_URL}/api/auth/login"
-TASKS_URL = f"{BASE_URL}/api/tasks/"
+LOGIN_URL = f"{BASE_URL}/api/v1/auth/login"
+TASKS_URL = f"{BASE_URL}/api/v1/tasks/"
 
 def iniciar_sesion(email, password):
     """Obtiene el token de acceso para un usuario."""
@@ -144,7 +144,7 @@ def probar_paginacion(token):
 if __name__ == "__main__":
     print("--- Iniciando Pruebas de Integración (Tareas) ---")
     probrar_acceso_no_autorizado()
-    token = iniciar_sesion("juan.perez@example.com", "password123")
+    token = iniciar_sesion("admin@logika.com", "adminpassword")
     task_id = probar_creacion_tarea(token)
     probar_obtener_tarea(task_id, token)
     probar_actualizacion_tarea(task_id, token)

@@ -2,8 +2,8 @@ import requests
 import sys
 
 BASE_URL = "http://localhost:8000"
-LOGIN_URL = f"{BASE_URL}/api/auth/login"
-TASKS_URL = f"{BASE_URL}/api/tasks/"
+LOGIN_URL = f"{BASE_URL}/api/v1/auth/login"
+TASKS_URL = f"{BASE_URL}/api/v1/tasks/"
 
 def obtener_token(email, password):
     """Auxiliar para obtener el token JWT."""

@@ -2,7 +2,7 @@ import requests
 import sys
 
 BASE_URL = "http://localhost:8000"
-LOGIN_URL = f"{BASE_URL}/api/auth/login"
+LOGIN_URL = f"{BASE_URL}/api/v1/auth/login"
 
 def probar_inicio_sesion_exitoso():
     """Verifica que un usuario con credenciales correctas pueda obtener un token."""

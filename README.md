@@ -26,6 +26,7 @@ Este proyecto ha sido diseñado para cumplir con los estándares más altos de c
 3.  **Logs Estructurados**: Implementación de `structlog` para logs profesionales que facilitan la auditoría.
 4.  **Inicialización Automática (Seeders)**: El sistema inyecta automáticamente 3 usuarios y 22 tareas de ejemplo al iniciar, permitiendo pruebas inmediatas sin configuración manual.
 5.  **Pruebas Unitarias e Integración**: Suite de pruebas con `pytest` y scripts de verificación end-to-end.
+6.  **Versionamiento de API**: Implementación de `Versionado de API` para facilitar la evolución de la API, ejemplo `/api/v1/tasks`.
 
 ---
 
@@ -58,36 +59,37 @@ Este proyecto ha sido diseñado para cumplir con los estándares más altos de c
 Docker es la opción preferida ya que crea un entorno aislado y configura la base de datos automáticamente.
 
 1.  **Requisitos**: Tener instalado [Docker](https://docs.docker.com/get-docker/) y [Docker Compose](https://docs.docker.com/compose/install/).
-2.  **Configuración de Variables**: Aunque el `docker-compose.yml` tiene valores por defecto para pruebas rápidas, se recomienda crear un archivo `.env` en la carpeta raíz con el siguiente contenido:
+2.  **Configuración de Variables**: Crear un archivo `.env` en la carpeta raíz con las siguientes variables (puedes cambiar los valores según tus necesidades):
     ```env
-    DB_HOST=db
-    DB_PORT=5432
+    # DB
+    DB_HOST=postgres
+    DB_USER=admin
+    DB_PASSWORD=admin1234
     DB_NAME=logika_db
-    DB_USER=postgres
-    DB_PASSWORD=postgres
-    SECRET_KEY=clave_secreta_para_jwt_aqui
+    DB_PORT=5432
+
+    # JWT / Security
+    SECRET_KEY=supersecretkey
     ALGORITHM=HS256
-    ACCESS_TOKEN_EXPIRE_MINUTES=60
+    ACCESS_TOKEN_EXPIRE_MINUTES=30
     ```
 3.  **Lanzar el proyecto**: Abre una terminal en la raíz del proyecto y ejecuta:
     ```bash
     docker compose up --build
     ```
-    *   **¿Qué sucede detrás de cámaras?**:
-        *   Se descarga la imagen de PostgreSQL y se crea la base de datos.
-        *   Se construye la imagen de la aplicación Python.
-        *   El script `entrypoint.sh` detecta cuando la base de datos está lista para recibir conexiones.
-        *   Se ejecutan las **migraciones de Alembic** para crear las tablas y los **usuarios iniciales**.
-        *   La aplicación se inicia en el puerto `8000`.
 4.  **Verificación**:
-    *   Visita `http://localhost:8000/docs` para ver la documentación interactiva de Swagger.
+    *   Api disponible en `http://localhost:8000`.
+    *   documentación interactiva de Swagger `http://localhost:8000/docs`.
+    La documentación OpenAPI incluye autenticación JWT.  
+    Para probar endpoints protegidos, usa el botón **Authorize** e ingresa el token con el formato:
+    Bearer <token>
 
 ---
 
 ### Opción B: Ejecución Local (Desarrollo Manual)
 Si prefieres tener control manual sobre el proceso o no deseas usar Docker para la aplicación:
 
-1.  **Base de Datos**: Debes tener una instancia de PostgreSQL accesible.
+1.  **Base de Datos**: Debes tener una instancia de PostgreSQL accesible o usar la base de datos que se encuentra en el docker-compose.yml, ejecutando el comando `docker compose up -d postgres`.
 2.  **Entorno Virtual**: Crea un entorno de Python 3.11.8 para evitar conflictos de librerías:
     ```bash
     python -m venv .venv
@@ -107,7 +109,6 @@ Si prefieres tener control manual sobre el proceso o no deseas usar Docker para 
     ```bash
     uvicorn main:app --reload
     ```
-
 ---
 
 ## 👤 Usuarios de Prueba e Inicio de Sesión
@@ -143,6 +144,14 @@ Con el servidor corriendo (`docker compose up`), abre otra terminal y ejecuta es
 *   **Paginación**: Se utiliza el estándar REST de parámetros `page` y `page_size`, devolviendo una estructura que incluye el total de páginas para facilitar la navegación en el frontend.
 *   **Aislamiento de Recursos**: Se implementó una lógica donde el `user_id` es inyectado desde el token JWT en cada consulta, impidiendo que un ID de tarea manipulado por el usuario pueda exponer datos de terceros.
 *   **Logging en Tiempo Real**: Configurado para mostrar marcas de tiempo y niveles de severidad claramente en la consola, facilitando la depuración durante el desarrollo.
+
+
+## 🧠 Notas Técnicas
+
+- Se utiliza SQLAlchemy ORM con sesiones por request.
+- Las transacciones se controlan explícitamente desde la capa de servicio.
+- Alembic se ejecuta automáticamente al iniciar el contenedor.
+- La API sigue principios REST y separación de responsabilidades.
 
 ---
 **¡Prueba Finalizada con Éxito!**

@@ -6,7 +6,7 @@ from .endpoints.task import router as task_router
 
 router = APIRouter()
 router.include_router(health_router, prefix="/health", tags=["Salud"])
-router.include_router(auth_router, prefix="/auth", tags=["Autenticación"])
-router.include_router(task_router, prefix="/tasks", tags=["Tareas"])
+router.include_router(auth_router, prefix="/v1/auth", tags=["Autenticación"])
+router.include_router(task_router, prefix="/v1/tasks", tags=["Tareas"])
 
 __all__ = ["router"]

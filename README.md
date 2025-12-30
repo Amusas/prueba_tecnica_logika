@@ -23,11 +23,9 @@ Este proyecto ha sido diseñado para cumplir con los estándares más altos de c
 
 1.  **Seguridad de Propiedad (Ownership)**: Se implementó un aislamiento estricto. Un usuario autenticado **solo puede ver, editar o eliminar sus propias tareas**.
 2.  **Arquitectura Modular**: Separación clara en capas: Routers (API), Servicios (Lógica), Modelos (ORM), Schemas (Pydantic), y Mappers (Conversión de datos).
-3.  **Logs Estructurados**: Implementación de `structlog` para logs en formato JSON, ideales para monitoreo y auditoría.
-4.  **Inicialización Automática (Seeders)**: El sistema inyecta automáticamente 3 usuarios y 22 tareas de ejemplo al iniciar, permitiendo pruebas inmediatas.
+3.  **Logs Estructurados**: Implementación de `structlog` para logs profesionales que facilitan la auditoría.
+4.  **Inicialización Automática (Seeders)**: El sistema inyecta automáticamente 3 usuarios y 22 tareas de ejemplo al iniciar, permitiendo pruebas inmediatas sin configuración manual.
 5.  **Pruebas Unitarias e Integración**: Suite de pruebas con `pytest` y scripts de verificación end-to-end.
-6.  **Dockerfile Profesional**: Uso de *multi-stage builds*, usuario no-root y `entrypoint.sh` con espera activa de base de datos.
-7.  **Swagger con JWT**: Configuración de `HTTPBearer` en Swagger para facilitar la introducción del token JWT directamente.
 
 ---
 
@@ -35,113 +33,117 @@ Este proyecto ha sido diseñado para cumplir con los estándares más altos de c
 
 ```text
 .
-├── alembic/                # Historial de migraciones de DB
+├── alembic/                # Historial de migraciones de la base de datos
 ├── app/
-│   ├── api/                # Enrutadores y dependencias de seguridad
-│   ├── core/               # Configuración, seguridad JWT y logging
-│   ├── db/                 # Conexión, sesión y semillas (Seeder)
-│   ├── exceptions/         # Excepciones personalizadas y handlers
-│   ├── mappers/            # Capa de transformación (ORM <-> DTO)
-│   ├── models/             # Modelos de SQLAlchemy (Entidades)
-│   └── schemas/            # Esquemas de Pydantic (Validación)
-├── tests/                  # Pruebas unitarias de servicios y endpoints
-├── Dockerfile              # Imagen optimizada y segura
-├── docker-compose.yml      # Orquestación de servicios (API + PostgreSQL)
-├── entrypoint.sh           # Script de arranque (espera DB + migraciones)
-├── main.py                 # Punto de entrada FastAPI
-└── .env                    # Variables de entorno (Debe crearse manualmente)
+│   ├── api/                # Enrutadores (Endpoints) y dependencias de seguridad
+│   ├── core/               # Configuraciones globales, seguridad JWT y lógica de logging
+│   ├── db/                 # Gestión de la sesión de SQLAlchemy y scripts de datos semilla
+│   ├── exceptions/         # Definición de excepciones personalizadas y sus manejadores HTTP
+│   ├── mappers/            # Capa de transformación para convertir Entidades ORM a DTOs de respuesta
+│   ├── models/             # Definición de tablas de la base de datos (SQLAlchemy)
+│   └── schemas/            # Definición de modelos de validación y entrada/salida (Pydantic)
+├── tests/                  # Pruebas unitarias automatizadas
+├── Dockerfile              # Configuración de la imagen de la aplicación (Multi-stage)
+├── docker-compose.yml      # Definición de servicios (App de FastAPI + Base de Datos Postgres)
+├── entrypoint.sh           # Script que asegura que la DB esté lista antes de migrar e iniciar
+├── main.py                 # Inicialización de la aplicación FastAPI y registro de routers
+└── .gitignore              # Archivos y carpetas excluidos del control de versiones
 ```
 
 ---
 
-## 🛠️ Instrucciones de Ejecución
+## 🛠️ Instrucciones de Ejecución Paso a Paso
 
 ### Opción A: Ejecución con Docker (Recomendada)
-Esta es la forma más rápida y segura de ejecutar el proyecto, ya que Docker se encarga de configurar la base de datos y todas las dependencias.
+Docker es la opción preferida ya que crea un entorno aislado y configura la base de datos automáticamente.
 
-1.  **Clonar el repositorio** e ingresar a la carpeta del proyecto.
-2.  **Preparar el entorno**: Crea un archivo llamado `.env` en la raíz del proyecto. Puedes usar el siguiente bloque como plantilla:
+1.  **Requisitos**: Tener instalado [Docker](https://docs.docker.com/get-docker/) y [Docker Compose](https://docs.docker.com/compose/install/).
+2.  **Configuración de Variables**: Aunque el `docker-compose.yml` tiene valores por defecto para pruebas rápidas, se recomienda crear un archivo `.env` en la carpeta raíz con el siguiente contenido:
     ```env
     DB_HOST=db
     DB_PORT=5432
     DB_NAME=logika_db
     DB_USER=postgres
     DB_PASSWORD=postgres
-    SECRET_KEY=supersecretkey
+    SECRET_KEY=clave_secreta_para_jwt_aqui
     ALGORITHM=HS256
     ACCESS_TOKEN_EXPIRE_MINUTES=60
     ```
-3.  **Construir y levantar**: Ejecuta el siguiente comando en tu terminal:
+3.  **Lanzar el proyecto**: Abre una terminal en la raíz del proyecto y ejecuta:
     ```bash
     docker compose up --build
     ```
-    *   *Nota*: El script `entrypoint.sh` esperará a que PostgreSQL esté listo, ejecutará automáticamente las migraciones de Alembic e iniciará el servidor Uvicorn.
-4.  **Acceder a la API**:
-    *   API Base: `http://localhost:8000`
-    *   Documentación Swagger: `http://localhost:8000/docs`
+    *   **¿Qué sucede detrás de cámaras?**:
+        *   Se descarga la imagen de PostgreSQL y se crea la base de datos.
+        *   Se construye la imagen de la aplicación Python.
+        *   El script `entrypoint.sh` detecta cuando la base de datos está lista para recibir conexiones.
+        *   Se ejecutan las **migraciones de Alembic** para crear las tablas y los **usuarios iniciales**.
+        *   La aplicación se inicia en el puerto `8000`.
+4.  **Verificación**:
+    *   Visita `http://localhost:8000/docs` para ver la documentación interactiva de Swagger.
 
 ---
 
-### Opción B: Ejecución Local (Desarrollo)
-Si prefieres no usar Docker para la aplicación, sigue estos pasos:
+### Opción B: Ejecución Local (Desarrollo Manual)
+Si prefieres tener control manual sobre el proceso o no deseas usar Docker para la aplicación:
 
-1.  **Base de Datos**: Asegúrate de tener una instancia de PostgreSQL corriendo (puedes usar Docker solo para la DB: `docker run --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -p 5432:5432 -d postgres`).
-2.  **Crear archivo .env**: Ajusta los valores de conexión (ej. `DB_HOST=localhost`).
-3.  **Entorno Virtual**:
+1.  **Base de Datos**: Debes tener una instancia de PostgreSQL accesible.
+2.  **Entorno Virtual**: Crea un entorno de Python 3.11.8 para evitar conflictos de librerías:
     ```bash
     python -m venv .venv
-    source .venv/bin/activate  # En Linux/Mac
-    # .venv\Scripts\activate   # En Windows
+    source .venv/bin/activate  # MacOS/Linux
+    # .venv\Scripts\activate   # Windows
     ```
-4.  **Instalar dependencias**:
+3.  **Instalación**: Instala todas las dependencias necesarias:
     ```bash
     pip install -r requirements.txt
     ```
-5.  **Ejecutar Migraciones**: Esto creará las tablas y el usuario inicial.
+4.  **Configuración**: Crea un archivo `.env` y asegúrate de que `DB_HOST` apunte a tu servidor de Postgres (normalmente `localhost`).
+5.  **Migraciones y Datos**: Ejecuta este comando para crear las tablas y las semillas:
     ```bash
     alembic upgrade head
     ```
-6.  **Iniciar la Aplicación**:
+6.  **Arranque**: Inicia el servidor de desarrollo:
     ```bash
     uvicorn main:app --reload
     ```
 
 ---
 
-## 👤 Usuarios Iniciales (Credenciales)
+## 👤 Usuarios de Prueba e Inicio de Sesión
 
-Al ejecutar las migraciones o iniciar la app por primera vez, se inyectan estos usuarios:
+Para probar la API, puedes usar las siguientes credenciales pre-cargadas:
 
-| Email | Contraseña | Rol / Descripción |
+| Email | Contraseña | Objetivo de Prueba |
 | :--- | :--- | :--- |
-| **admin@logika.com** | `adminpassword` | Usuario Administrador Principal |
-| **juan.perez@example.com** | `password123` | Usuario de prueba para CRUD |
-| **maria.garcia@example.com** | `password123` | Segundo usuario para pruebas de propiedad |
+| **admin@logika.com** | `adminpassword` | Verificar acceso total y datos semilla iniciales. |
+| **juan.perez@example.com** | `password123` | Probar la creación y edición de tareas propias. |
+| **maria.garcia@example.com** | `password123` | Verificar que no puede ver las tareas de `juan.perez`. |
 
 ---
 
-## 🧪 Pruebas y Validación
+## 🧪 Cómo Ejecutar las Pruebas
 
-### Pruebas Unitarias
-Orientadas a probar la lógica de los servicios y endpoints de forma aislada.
+### 1. Pruebas Unitarias (Slogan: "Calidad de Código")
+Ejecuta la suite de pruebas internas para validar la lógica sin depender de una base de datos real:
 ```bash
 pytest tests/unit
 ```
 
-### Scripts de Integración (Pruebas End-to-End)
-Estos scripts ejecutan peticiones HTTP reales contra la API levantada. **Importante**: Asegúrate de que la app esté corriendo en `http://localhost:8000`.
-
-1.  **Autenticación**: `python verify_auth.py`
-2.  **Gestión de Tareas**: `python verify_tasks.py` (Limpia sus propios datos al terminar).
-3.  **Propiedad (Security)**: `python verify_ownership.py` (Verifica que el Usuario A no vea lo del Usuario B).
+### 2. Pruebas de Integración (Slogan: "Flujo Real")
+Con el servidor corriendo (`docker compose up`), abre otra terminal y ejecuta estos scripts para validar el comportamiento real punto a punto:
+*   `python verify_auth.py`: Valida el proceso de autenticación JWT.
+*   `python verify_tasks.py`: Valida el CRUD completo, incluyendo el borrado suave y la paginación.
+*   `python verify_ownership.py`: Valida la seguridad de aislamiento (Ownership) entre diferentes usuarios.
 
 ---
 
-## 📌 Justificación Técnica
+## 📌 Decisiones Técnicas Destacadas
 
-*   **Índices**: Se indexó `user_id` porque es la columna de unión principal y filtro de seguridad. `status` y `created_at` se indexaron para optimizar el listado paginado y ordenado que la UI suele requerir.
-*   **Aislamiento**: El uso de `Depends(get_current_user)` en todos los endpoints de `tasks` garantiza que ningún dato sea expuesto sin una sesión válida.
-*   **Paginación**: Se implementó una paginación basada en `offset` y `limit`, devolviendo también metadatos como `total_pages` para facilitar el consumo desde el frontend.
+*   **Paginación**: Se utiliza el estándar REST de parámetros `page` y `page_size`, devolviendo una estructura que incluye el total de páginas para facilitar la navegación en el frontend.
+*   **Aislamiento de Recursos**: Se implementó una lógica donde el `user_id` es inyectado desde el token JWT en cada consulta, impidiendo que un ID de tarea manipulado por el usuario pueda exponer datos de terceros.
+*   **Logging en Tiempo Real**: Configurado para mostrar marcas de tiempo y niveles de severidad claramente en la consola, facilitando la depuración durante el desarrollo.
 
 ---
 **¡Prueba Finalizada con Éxito!**
+*Desarrollado para el proceso de selección de Logika.*
